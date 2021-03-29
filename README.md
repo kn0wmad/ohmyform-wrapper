@@ -1,6 +1,6 @@
-# Wrapper for hello-world
+# Wrapper for OhMyForm
 
-`hello-world` is a simple, minimal project to serve as a template for creating an app for the Embassy.
+[OhMyForm](https://ohmyform.com/) is a free, opensource form builder similar to Google Forms or TypeForm.
 
 ## Dependencies
 
@@ -16,8 +16,9 @@
 Clone the project locally. Note the submodule link to the original project(s). 
 
 ```
-git clone git@github.com:Start9Labs/hello-world-wrapper.git
-cd hello-world-wrapper
+git clone git@github.com:Start9Labs/ohmyform-wrapper.git
+cd ohmyform
+git submodule update --init --recursive
 ```
 
 ## Building
@@ -35,5 +36,5 @@ SSH into an Embassy device.
 Run the following command to determine successful install:
 
 ```
-appmgr install hello-world.s9pk
+appmgr install ohmyform.s9pk
 ```
