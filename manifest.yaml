@@ -1,17 +1,18 @@
 compat: v0
-id: hello-world
-version: 0.1.0
-title: hello-world
+id: oh-my-form
+version: 0.9.9
+title: oh-my-form
 description:
-  short: "A simple, minimal project to serve as a template for creating an app for the Embassy."
-  long: "Hello World is a simple, minimal project to serve as a template for creating an app for the Embassy."
+  short: "Craft beautiful forms in seconds"
+  long: "OhMyForm is a free, open source form builder similar to Google Forms or TypeForm."
+uninstall-alert: "Warning: You may lose all your data if you have not done a backup"
 release-notes: Initial release.
 ports:
   - internal: 80
     tor: 80
 image:
   type: tar
-mount: /root
+mount: /root/ohmyform
 has-instructions: true
 os-version-required: ">=0.2.4"
 os-version-recommended: ">=0.2.4"
