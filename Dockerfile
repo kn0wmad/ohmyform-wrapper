@@ -1,14 +1,53 @@
-FROM alpine:3.12
+## Build API
+FROM node:14-alpine as api
 
-RUN apk update
-RUN apk add tini
+WORKDIR /root/ohmyform/app
 
-ADD ./hello-world/target/armv7-unknown-linux-musleabihf/release/hello-world /usr/local/bin/hello-world
-ADD ./docker_entrypoint.sh /usr/local/bin/docker_entrypoint.sh
-RUN chmod a+x /usr/local/bin/docker_entrypoint.sh
+COPY ui/ .
 
-WORKDIR /root
+RUN yarn install --frozen-lockfile
+RUN yarn export
 
-EXPOSE 80
+## Build APP
+FROM node:14-alpine as app
+LABEL maintainer="OhMyForm <admin@ohmyform.com>"
 
-ENTRYPOINT ["/usr/local/bin/docker_entrypoint.sh"]
+WORKDIR /root/ohmyform/app
+
+RUN apk update && apk add curl bash && rm -rf /var/cache/apk/*
+
+# install node-prune (https://github.com/tj/node-prune)
+RUN curl -sfL https://install.goreleaser.com/github.com/tj/node-prune.sh | bash -s -- -b /usr/local/bin
+
+
+COPY api/ .
+COPY --from=api /root/ohmyform/app/out /root/ohmyform/app/public
+
+RUN yarn install --frozen-lockfile
+RUN yarn build
+
+# remove development dependencies
+RUN npm prune --production
+
+# run node prune
+RUN /usr/local/bin/node-prune
+
+## Glue
+RUN touch /root/ohmyform/app/src/schema.gql && chown 9999:9999 /root/ohmyform/app/src/schema.gql
+
+## Production Image.
+FROM node:14-alpine
+
+WORKDIR /root/ohmyform/app
+COPY --from=app /root/ohmyform/app /root/ohmyform/app
+RUN addgroup --gid 9999 ohmyform && adduser -D --uid 9999 -G ohmyform ohmyform
+ENV PORT=3000 \
+    SECRET_KEY=ChangeMe \
+    CREATE_ADMIN=FALSE \
+    ADMIN_EMAIL=admin@ohmyform.com \
+    ADMIN_USERNAME=root \
+    ADMIN_PASSWORD=root
+
+EXPOSE 3000
+USER ohmyform
+CMD [ "yarn", "start:prod" ]
