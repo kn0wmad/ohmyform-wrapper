@@ -1,20 +1,22 @@
 compat: v0
-id: oh-my-form
+id: ohmyform
 version: 0.9.9
-title: oh-my-form
+title: ohmyform
 description:
   short: "Craft beautiful forms in seconds"
   long: "OhMyForm is a free, open source form builder similar to Google Forms or TypeForm."
+install-alert: |
+  After installing OhMyForm, you can find your default username and password in the "Properties" section.
 uninstall-alert: "Warning: You may lose all your data if you have not done a backup"
 release-notes: Initial release.
 ports:
-  - internal: 80
-    tor: 80
+  - internal: 3000
+    tor: 3000
 image:
   type: tar
 mount: /root/ohmyform
 has-instructions: true
-os-version-required: ">=0.2.4"
-os-version-recommended: ">=0.2.4"
+os-version-required: ">=0.2.12"
+os-version-recommended: ">=0.2.12"
 assets: []
 hidden-service-version: v3
