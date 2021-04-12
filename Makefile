@@ -13,8 +13,8 @@ all: ohmyform.s9pk
 install: ohmyform.s9pk
 	appmgr install ohmyform.s9pk
 
-ohmyform.s9pk: manifest.yaml config_spec.yaml config_rules.yaml image.tar docs/instructions.md $(ASSET_PATHS)
-	appmgr -vv pack $(bash pwd) -o ohmyform.s9pk
+ohmyform.s9pk: manifest.yaml config_spec.yaml config_rules.yaml image.tar instructions.md $(ASSET_PATHS)
+	appmgr -vv pack $(shell pwd) -o ohmyform.s9pk
 	appmgr -vv verify ohmyform.s9pk
 
 image.tar: Dockerfile docker_entrypoint.sh $(OMF_GIT_FILE)
