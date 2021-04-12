@@ -1,6 +1,6 @@
 compat: v0
 id: ohmyform
-version: 0.9.9
+version: ""
 title: ohmyform
 description:
   short: "Craft beautiful forms in seconds"
@@ -8,7 +8,7 @@ description:
 install-alert: |
   After installing OhMyForm, you can find your default username and password in the "Properties" section.
 uninstall-alert: "Warning: You may lose all your data if you have not done a backup"
-release-notes: Initial release.
+release-notes: https://github.com/Ride-The-Lightning/OMF/releases/tag/
 ports:
   - internal: 3000
     tor: 3000

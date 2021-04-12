@@ -1,28 +1,29 @@
-ASSETS := $(shell yq r manifest.yaml assets.*.src)
+ASSETS := $(shell yq e '.assets.[].src' manifest.yaml)
 ASSET_PATHS := $(addprefix assets/,$(ASSETS))
-VERSION := $(shell toml get hello-world/Cargo.toml package.version)
-HELLO_WORLD_SRC := $(shell find ./hello-world/src) hello-world/Cargo.toml hello-world/Cargo.lock
+VERSION_TAG := $(shell git --git-dir=ohmyform/.git describe --tags --abbrev=0)
+VERSION := $(VERSION_TAG:v%=%)
+OMF_GIT_REF := $(shell cat .git/modules/ohmyform/HEAD)
+OMF_GIT_FILE := $(addprefix .git/modules/ohmyform/,$(if $(filter ref:%,$(OMF_GIT_REF)),$(lastword $(OMF_GIT_REF)),HEAD))
+# CONFIGURATOR_SRC := $(shell find ./configurator/src) configurator/Cargo.toml configurator/Cargo.lock
 
 .DELETE_ON_ERROR:
 
-all: hello-world.s9pk
+all: ohmyform.s9pk
 
-install: hello-world.s9pk
-	appmgr install hello-world.s9pk
+install: ohmyform.s9pk
+	appmgr install ohmyform.s9pk
 
-hello-world.s9pk: manifest.yaml config_spec.yaml config_rules.yaml image.tar instructions.md $(ASSET_PATHS)
-	appmgr -vv pack $(shell pwd) -o hello-world.s9pk
-	appmgr -vv verify hello-world.s9pk
+ohmyform.s9pk: manifest.yaml config_spec.yaml config_rules.yaml image.tar docs/instructions.md $(ASSET_PATHS)
+	appmgr -vv pack $(bash pwd) -o ohmyform.s9pk
+	appmgr -vv verify ohmyform.s9pk
 
-instructions.md: README.md
-	cp README.md instructions.md
+image.tar: Dockerfile docker_entrypoint.sh $(OMF_GIT_FILE)
+	DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build --tag start9/ohmyform --build-arg --platform=linux/arm/v7 -o type=docker,dest=image.tar .
 
-image.tar: Dockerfile docker_entrypoint.sh hello-world/target/armv7-unknown-linux-musleabihf/release/hello-world
-	DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build --tag start9/hello-world --platform=linux/arm/v7 -o type=docker,dest=image.tar .
+# configurator/target/armv7-unknown-linux-musleabihf/release/configurator: $(CONFIGURATOR_SRC)
+# 	docker run --rm -v ~/.cargo/registry:/root/.cargo/registry -v "$(shell pwd)"/configurator:/home/rust/src start9/rust-musl-cross:armv7-musleabihf cargo +beta build --release
+# 	docker run --rm -v ~/.cargo/registry:/root/.cargo/registry -v "$(shell pwd)"/configurator:/home/rust/src start9/rust-musl-cross:armv7-musleabihf musl-strip target/armv7-unknown-linux-musleabihf/release/configurator
 
-hello-world/target/armv7-unknown-linux-musleabihf/release/hello-world: $(HELLO_WORLD_SRC)
-	docker run --rm -it -v ~/.cargo/registry:/root/.cargo/registry -v "$(shell pwd)"/hello-world:/home/rust/src start9/rust-musl-cross:armv7-musleabihf cargo +beta build --release
-	docker run --rm -it -v ~/.cargo/registry:/root/.cargo/registry -v "$(shell pwd)"/hello-world:/home/rust/src start9/rust-musl-cross:armv7-musleabihf musl-strip target/armv7-unknown-linux-musleabihf/release/hello-world
-
-manifest.yaml: hello-world/Cargo.toml
-	yq w -i manifest.yaml version $(VERSION)
+manifest.yaml: $(OMF_GIT_FILE)
+	yq eval -i ".version = \"$(VERSION)\"" manifest.yaml
+	yq eval -i ".release-notes = \"https://github.com/ohmyform/ohmyform/releases/tag/$(VERSION_TAG)\"" manifest.yaml 
