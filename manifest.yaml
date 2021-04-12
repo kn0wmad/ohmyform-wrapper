@@ -17,6 +17,6 @@ image:
 mount: /root/ohmyform
 has-instructions: true
 os-version-required: ">=0.2.11"
-os-version-recommended: ">=0.2.11"
+os-version-recommended: ">=0.2.12"
 assets: []
 hidden-service-version: v3

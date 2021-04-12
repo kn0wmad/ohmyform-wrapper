@@ -1,45 +1,47 @@
 ## Build API
-FROM node:14-alpine as api
+FROM arm32v7/node:13-alpine as api
 
-WORKDIR /root/ohmyform/app
+WORKDIR /usr/src/app
 
 COPY ohmyform/ui/ .
 
 RUN yarn install --frozen-lockfile
 RUN yarn export
+RUN yarn autoclean
 
 ## Build APP
-FROM node:14-alpine as app
+FROM arm32v7/node:13-alpine as app
 LABEL maintainer="OhMyForm <admin@ohmyform.com>"
 
-WORKDIR /root/ohmyform/app
+WORKDIR /usr/src/app
 
-RUN apk update && apk add curl bash && rm -rf /var/cache/apk/*
+RUN apk update && apk add curl bash python make gcc g++ mongodb redis && rm -rf /var/cache/apk/*
 
 # install node-prune (https://github.com/tj/node-prune)
-RUN curl -sf https://gobinaries.com/tj/node-prune | sh
+# RUN curl -sf https://gobinaries.com/tj/node-prune | sh
 
 
 COPY ohmyform/api/ .
-COPY --from=api /root/ohmyform/app/out /root/ohmyform/app/public
+COPY --from=api /usr/src/app/out /usr/src/app/public
 
 RUN yarn install --frozen-lockfile
 RUN yarn build
+RUN yarn autoclean
 
 # remove development dependencies
-RUN npm prune --production
+# RUN npm prune --production
 
 # run node prune
-RUN /usr/local/bin/node-prune
+# RUN /usr/local/bin/node-prune
 
 ## Glue
-RUN touch /root/ohmyform/app/src/schema.gql && chown 9999:9999 /root/ohmyform/app/src/schema.gql
+RUN touch /usr/src/app/src/schema.gql && chown 9999:9999 /usr/src/app/src/schema.gql
 
 ## Production Image.
-FROM node:14-alpine
+FROM arm32v7/node:13-alpine
 
-WORKDIR /root/ohmyform/app
-COPY --from=app /root/ohmyform/app /root/ohmyform/app
+WORKDIR /usr/src/app
+COPY --from=app /usr/src/app /usr/src/app
 RUN addgroup --gid 9999 ohmyform && adduser -D --uid 9999 -G ohmyform ohmyform
 ENV PORT=3000 \
     SECRET_KEY=ChangeMe \
